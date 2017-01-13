@@ -18,8 +18,10 @@ Should work on default machine @ http://192.168.99.100
     * exit
 6. docker-compose stop
 7. docker-compose up -d
-8. try oauth login at http://192.168.99.100/geoserver
+8. try clicking oauth login button at http://192.168.99.100/geoserver
+9. done!
 
+-------------------------------
 
 GeoNode template project. Generates a django project with GeoNode support.
 
