@@ -1,6 +1,26 @@
 docker_geonode
 ========================
 
+Trying out docker-geonode-oauth
+-------------------------------
+
+Should work on default machine @ http://192.168.99.100
+
+1. git clone https://github.com/senoadiw/docker-geonode-oauth.git
+2. cd docker-geonode-oauth
+3. docker-compose up -d
+4. docker-compose ps
+5. docker exec -it dockergeonodeoauth_django_1 bash
+    * python manage.py migrate account --noinput && python manage.py migrate --noinput
+    * python manage.py collectstatic --noinput
+    * python manage.py createsuperuser
+    * python manage.py loaddata fixtures/default_oauth_apps.json
+    * exit
+6. docker-compose stop
+7. docker-compose up -d
+8. try oauth login at http://192.168.99.100/geoserver
+
+
 GeoNode template project. Generates a django project with GeoNode support.
 
 Create a custom project
