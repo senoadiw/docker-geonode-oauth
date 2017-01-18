@@ -11,8 +11,7 @@ Should work on default machine @ http://192.168.99.100
 3. docker-compose up -d
 4. docker-compose ps
 5. docker exec -it dockergeonodeoauth_django_1 bash
-    * python manage.py migrate account --noinput && python manage.py migrate --noinput
-    * python manage.py collectstatic --noinput
+    * python manage.py migrate account --noinput && python manage.py migrate --noinput && python manage.py collectstatic --noinput
     * python manage.py createsuperuser
     * python manage.py loaddata fixtures/default_oauth_apps.json
     * exit
