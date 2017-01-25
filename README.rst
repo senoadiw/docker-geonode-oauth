@@ -1,6 +1,8 @@
 docker_geonode
 ========================
 
+GeoNode 2.5.9 with GeoServer oauth2 configured
+
 Trying out docker-geonode-oauth
 -------------------------------
 
