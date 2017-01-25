@@ -4,7 +4,7 @@ docker_geonode
 Trying out docker-geonode-oauth
 -------------------------------
 
-Should work on default machine @ http://192.168.99.100
+Should work on default machine @ http://192.168.99.100. If not adjust the IP addresses in the docker-compose.yml and fixtures/default_oauth_apps.json.
 
 1. git clone https://github.com/senoadiw/docker-geonode-oauth.git
 2. cd docker-geonode-oauth
