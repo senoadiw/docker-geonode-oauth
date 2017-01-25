@@ -4,7 +4,11 @@ docker_geonode
 Trying out docker-geonode-oauth
 -------------------------------
 
-Should work on default machine @ http://192.168.99.100. If not adjust the IP addresses in the docker-compose.yml and fixtures/default_oauth_apps.json.
+This will run GeoNode on the default docker machine.
+
+Make sure the default machine is accessible at http://geonode. Edit the /etc/hosts file if necessary.
+
+If using Docker with the VirtualBox driver on Windows, make sure to assign at least 4096MB of RAM to the default machine VM.
 
 1. git clone https://github.com/senoadiw/docker-geonode-oauth.git
 2. cd docker-geonode-oauth
@@ -12,13 +16,16 @@ Should work on default machine @ http://192.168.99.100. If not adjust the IP add
 4. docker-compose ps
 5. docker exec -it dockergeonodeoauth_django_1 bash
     * python manage.py migrate account --noinput && python manage.py migrate --noinput && python manage.py collectstatic --noinput
-    * python manage.py createsuperuser
+    * python manage.py loaddata sample_admin
+    * python manage.py loaddata initial_data
     * python manage.py loaddata fixtures/default_oauth_apps.json
     * exit
 6. docker-compose stop
 7. docker-compose up -d
-8. try clicking oauth login button at http://192.168.99.100/geoserver
-9. done!
+8. wait a few minutes while GeoServer initializes
+9. access GeoNode at http://geonode
+10. try signing in from http://geonode/geoserver (admin admin)
+11. done!
 
 -------------------------------
 

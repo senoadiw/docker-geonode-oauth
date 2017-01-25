@@ -20,15 +20,14 @@
 
 # Django settings for the GeoNode project.
 import os
+
 from kombu import Queue
 from geonode import __file__ as geonode_path
 from geonode import get_version
 from geonode.celery_app import app  # flake8: noqa
+from distutils.util import strtobool
 import djcelery
 import dj_database_url
-
-def str2bool(v):
-        return v.lower() in ("yes", "true", "t", "1")
 
 
 #
@@ -45,17 +44,19 @@ GEONODE_ROOT = os.path.abspath(os.path.dirname(geonode_path))
 
 # Setting debug to true makes Django serve static media and
 # present pretty error pages.
-DEBUG = str2bool(os.getenv('DEBUG', 'False'))
-TEMPLATE_DEBUG = str2bool(os.getenv('TEMPLATE_DEBUG', 'False'))
+DEBUG = strtobool(os.getenv('DEBUG', 'False'))
+TEMPLATE_DEBUG = strtobool(os.getenv('TEMPLATE_DEBUG', 'False'))
 
 # Set to True to load non-minified versions of (static) client dependencies
 # Requires to set-up Node and tools that are required for static development
 # otherwise it will raise errors for the missing non-minified dependencies
-DEBUG_STATIC = str2bool(os.getenv('DEBUG_STATIC', 'False'))
+DEBUG_STATIC = strtobool(os.getenv('DEBUG_STATIC', 'False'))
 
 # This is needed for integration tests, they require
 # geonode to be listening for GeoServer auth requests.
 os.environ['DJANGO_LIVE_TEST_SERVER_ADDRESS'] = 'localhost:8000'
+
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', ['localhost', 'django'])
 
 # AUTH_IP_WHITELIST property limits access to users/groups REST endpoints
 # to only whitelisted IP addresses.
@@ -68,12 +69,22 @@ os.environ['DJANGO_LIVE_TEST_SERVER_ADDRESS'] = 'localhost:8000'
 # AUTH_IP_WHITELIST = ['192.168.1.158', '192.168.1.159']
 AUTH_IP_WHITELIST = []
 
-SECRET_KEY = os.getenv('SECRET_KEY', "xev9&$y1$pnj$baidr@6dgal#ht11vk7s4sywl)igs9ctl(#-y")
+# Make this unique, and don't share it with anybody.
+_DEFAULT_SECRET_KEY = 'myv-y4#7j-d*p-__@j#*3z@!y24fz8%^z2v6atuy4bo9vqr1_a'
+SECRET_KEY = os.getenv('SECRET_KEY', _DEFAULT_SECRET_KEY)
 
-DATABASE_URL = os.getenv('DATABASE_URL', 'sqlite:///development.db')
-DATABASES = {'default':
-              dj_database_url.parse(DATABASE_URL, conn_max_age=600),
-            }
+DATABASE_URL = os.getenv(
+    'DATABASE_URL',
+    'sqlite:///{path}'.format(
+        path=os.path.join(PROJECT_ROOT, 'development.db')
+    )
+)
+
+# Defines settings for development
+DATABASES = {
+    'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
+}
+
 MANAGERS = ADMINS = os.getenv('ADMINS', [])
 
 # Local time zone for this installation. Choices can be found here:
@@ -85,14 +96,14 @@ TIME_ZONE = os.getenv('TIME_ZONE', "America/Chicago")
 
 SITE_ID = int(os.getenv('SITE_ID', '1'))
 
-USE_I18N = str2bool(os.getenv('USE_I18N', 'True'))
-USE_L10N = str2bool(os.getenv('USE_I18N', 'True'))
+USE_I18N = strtobool(os.getenv('USE_I18N', 'True'))
+USE_L10N = strtobool(os.getenv('USE_I18N', 'True'))
 
 # Language code for this installation. All choices can be found here:
 # http://www.i18nguy.com/unicode/language-identifiers.html
-LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', "en-us")
-# Underscore at the beginning added to represent a private variable.
-# should not be used in the application.
+LANGUAGE_CODE = os.getenv('LANGUAGE_CODE', "en")
+
+
 _DEFAULT_LANGUAGES = (
     ('en', 'English'),
     ('es', 'Español'),
@@ -155,12 +166,13 @@ EXTRA_LANG_INFO = {
         },
 }
 
-AUTH_USER_MODEL = os.getenv('AUTH_USER_MODEL','people.Profile')
+AUTH_USER_MODEL = os.getenv('AUTH_USER_MODEL', 'people.Profile')
 
 MODELTRANSLATION_LANGUAGES = ['en', ]
-MODELTRANSLATION_DEFAULT_LANGUAGE = 'en'
-MODELTRANSLATION_FALLBACK_LANGUAGES = ('en',)
 
+MODELTRANSLATION_DEFAULT_LANGUAGE = 'en'
+
+MODELTRANSLATION_FALLBACK_LANGUAGES = ('en',)
 
 # Absolute path to the directory that holds media.
 # Example: "/home/media/media.lawrence.com/"
@@ -169,16 +181,16 @@ MEDIA_ROOT = os.getenv('MEDIA_ROOT', os.path.join(PROJECT_ROOT, "uploaded"))
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash if there is a path component (optional in other cases).
 # Examples: "http://media.lawrence.com", "http://example.com/media/"
-MEDIA_URL = os.getenv('MEDIA_URL',"/uploaded/")
-LOCAL_MEDIA_URL = os.getenv('LOCAL_MEDIA_URL',"/uploaded/")
+MEDIA_URL = os.getenv('MEDIA_URL', "/uploaded/")
+LOCAL_MEDIA_URL = os.getenv('LOCAL_MEDIA_URL', "/uploaded/")
 
 # Absolute path to the directory that holds static files like app media.
 # Example: "/home/media/media.lawrence.com/apps/"
-STATIC_ROOT = os.getenv('STATIC_ROOT',os.path.join(PROJECT_ROOT, "static_root"))
+STATIC_ROOT = os.getenv('STATIC_ROOT', os.path.join(PROJECT_ROOT, "static_root"))
 
 # URL that handles the static files like app media.
 # Example: "http://media.lawrence.com"
-STATIC_URL = os.getenv('STATIC_URL',"/static/")
+STATIC_URL = os.getenv('STATIC_URL', "/static/")
 
 # Additional directories which hold static files
 _DEFAULT_STATICFILES_DIRS = [
@@ -186,7 +198,7 @@ _DEFAULT_STATICFILES_DIRS = [
     os.path.join(GEONODE_ROOT, "static"),
 ]
 
-STATICFILES_DIRS = os.getenv('STATICFILES_DIRS',_DEFAULT_STATICFILES_DIRS)
+STATICFILES_DIRS = os.getenv('STATICFILES_DIRS', _DEFAULT_STATICFILES_DIRS)
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -195,7 +207,7 @@ _DEFAULT_STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
-STATICFILES_FINDERS = os.getenv('STATICFILES_FINDERS',_DEFAULT_STATICFILES_FINDERS)
+STATICFILES_FINDERS = os.getenv('STATICFILES_FINDERS', _DEFAULT_STATICFILES_FINDERS)
 
 # Note that Django automatically includes the "templates" dir in all the
 # INSTALLED_APPS, se there is no need to add maps/templates or admin/templates
@@ -205,35 +217,36 @@ _DEFAULT_TEMPLATE_LOADERS = [
     "django.template.loaders.app_directories.Loader",
 ]
 
-TEMPLATE_LOADERS = os.getenv('TEMPLATE_LOADERS',_DEFAULT_TEMPLATE_LOADERS)
+TEMPLATE_LOADERS = os.getenv('TEMPLATE_LOADERS', _DEFAULT_TEMPLATE_LOADERS)
 
 _DEFAULT_TEMPLATE_DIRS = (
     os.path.join(PROJECT_ROOT, "templates"),
     os.path.join(GEONODE_ROOT, "templates"),
 )
-TEMPLATE_DIRS = os.getenv('TEMPLATE_DIRS',_DEFAULT_TEMPLATE_DIRS)
+TEMPLATE_DIRS = os.getenv('TEMPLATE_DIRS', _DEFAULT_TEMPLATE_DIRS)
 
 # Location of translation files
 _DEFAULT_LOCALE_PATHS = (
     os.path.join(PROJECT_ROOT, "locale"),
     os.path.join(GEONODE_ROOT, "locale"),
 )
-LOCALE_PATHS = os.getenv('LOCALE_PATHS',_DEFAULT_LOCALE_PATHS)
+LOCALE_PATHS = os.getenv('LOCALE_PATHS', _DEFAULT_LOCALE_PATHS)
 
 # Location of url mappings
-ROOT_URLCONF = os.getenv('ROOT_URLCONF','docker_geonode.urls')
+ROOT_URLCONF = os.getenv('ROOT_URLCONF', 'docker_geonode.urls')
 
 # Login and logout urls override
-LOGIN_URL = os.getenv('LOGIN_URL','/account/login/')
-LOGOUT_URL = os.getenv('LOGOUT_URL','/account/logout/')
+LOGIN_URL = os.getenv('LOGIN_URL', '/account/login/')
+LOGOUT_URL = os.getenv('LOGOUT_URL', '/account/logout/')
 
 # Documents application
 _DEFAULT_ALLOWED_DOCUMENT_TYPES = [
-    'doc', 'docx', 'gif', 'jpg', 'jpeg', 'ods', 'odt', 'odp', 'pdf', 'png', 'ppt',
-    'pptx', 'rar', 'sld', 'tif', 'tiff', 'txt', 'xls', 'xlsx', 'xml', 'zip', 'gz'
+    'doc', 'docx', 'gif', 'jpg', 'jpeg', 'ods', 'odt', 'odp', 'pdf', 'png',
+    'ppt', 'pptx', 'rar', 'sld', 'tif', 'tiff', 'txt', 'xls', 'xlsx', 'xml',
+    'zip', 'gz', 'qml'
 ]
-ALLOWED_DOCUMENT_TYPES = os.getenv('ALLOWED_DOCUMENT_TYPES',_DEFAULT_ALLOWED_DOCUMENT_TYPES)
-MAX_DOCUMENT_SIZE = int(os.getenv('MAX_DOCUMENT_SIZE ','2'))  # MB
+ALLOWED_DOCUMENT_TYPES = os.getenv('ALLOWED_DOCUMENT_TYPES', _DEFAULT_ALLOWED_DOCUMENT_TYPES)
+MAX_DOCUMENT_SIZE = int(os.getenv('MAX_DOCUMENT_SIZE ', '2'))  # MB
 
 # DOCUMENT_TYPE_MAP and DOCUMENT_MIMETYPE_MAP update enumerations in
 # documents/enumerations.py and should only
@@ -257,6 +270,9 @@ GEONODE_APPS = (
     'geonode.api',
     'geonode.groups',
     'geonode.services',
+
+    # QGIS Server Apps
+    # 'geonode_qgis_server',
 
     # GeoServer Apps
     # Geoserver needs to come last because
@@ -311,7 +327,7 @@ _DEFAULT_INSTALLED_APPS = (
     'geoexplorer',
     'leaflet',
     'django_extensions',
-    #'overextends',
+    #'geonode-client',
     # 'haystack',
     'autocomplete_light',
     'mptt',
@@ -340,7 +356,7 @@ _DEFAULT_INSTALLED_APPS = (
 
 ) + GEONODE_APPS
 
-INSTALLED_APPS = os.getenv('INSTALLED_APPS',_DEFAULT_INSTALLED_APPS)
+INSTALLED_APPS = os.getenv('INSTALLED_APPS', _DEFAULT_INSTALLED_APPS)
 
 
 _DEFAULT_LOGGING = {
@@ -394,7 +410,6 @@ LOGGING = os.getenv('LOGGING', _DEFAULT_LOGGING)
 # Customizations to built in Django settings required by GeoNode
 #
 
-
 _DEFAULT_TEMPLATE_CONTEXT_PROCESSORS = (
     'django.contrib.auth.context_processors.auth',
     'django.core.context_processors.debug',
@@ -410,12 +425,13 @@ _DEFAULT_TEMPLATE_CONTEXT_PROCESSORS = (
     'geonode.context_processors.resource_urls',
     'geonode.geoserver.context_processors.geoserver_urls',
 )
-TEMPLATE_CONTEXT_PROCESSORS = os.getenv('TEMPLATE_CONTEXT_PROCESSORS',_DEFAULT_TEMPLATE_CONTEXT_PROCESSORS)
+TEMPLATE_CONTEXT_PROCESSORS = os.getenv('TEMPLATE_CONTEXT_PROCESSORS', _DEFAULT_TEMPLATE_CONTEXT_PROCESSORS)
 
 _DEFAULT_MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+
     # The setting below makes it possible to serve different languages per
     # user depending on things like headers in HTTP requests.
     'django.middleware.locale.LocaleMiddleware',
@@ -423,18 +439,19 @@ _DEFAULT_MIDDLEWARE_CLASSES = (
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
     # This middleware allows to print private layers for the users that have
     # the permissions to view them.
     # It sets temporary the involved layers as public before restoring the permissions.
     # Beware that for few seconds the involved layers are public there could be risks.
     # 'geonode.middleware.PrintProxyMiddleware',
+
     # If you use SessionAuthenticationMiddleware, be sure it appears before OAuth2TokenMiddleware.
     # SessionAuthenticationMiddleware is NOT required for using django-oauth-toolkit.
     'django.contrib.auth.middleware.SessionAuthenticationMiddleware',
     'oauth2_provider.middleware.OAuth2TokenMiddleware',
 )
-MIDDLEWARE_CLASSES = os.getenv('MIDDLEWARE_CLASSES',_DEFAULT_MIDDLEWARE_CLASSES)
-
+MIDDLEWARE_CLASSES = os.getenv('MIDDLEWARE_CLASSES', _DEFAULT_MIDDLEWARE_CLASSES)
 
 
 # Replacement of default authentication backend in order to support
@@ -445,6 +462,7 @@ _DEFAULT_AUTHENTICATION_BACKENDS = (
     'guardian.backends.ObjectPermissionBackend',
 )
 AUTHENTICATION_BACKENDS = os.getenv('AUTHENTICATION_BACKENDS', _DEFAULT_AUTHENTICATION_BACKENDS)
+
 OAUTH2_PROVIDER = {
     'SCOPES': {
         'read': 'Read scope',
@@ -454,17 +472,25 @@ OAUTH2_PROVIDER = {
 
     'CLIENT_ID_GENERATOR_CLASS': 'oauth2_provider.generators.ClientIdGenerator',
 }
-ANONYMOUS_USER_ID = os.getenv('ANONYMOUS_USER_ID','-1')
-GUARDIAN_GET_INIT_ANONYMOUS_USER =os.getenv('GUARDIAN_GET_INIT_ANONYMOUS_USER','geonode.people.models.get_anonymous_user_instance')
+
+ANONYMOUS_USER_ID = os.getenv('ANONYMOUS_USER_ID', '-1')
+GUARDIAN_GET_INIT_ANONYMOUS_USER = os.getenv(
+    'GUARDIAN_GET_INIT_ANONYMOUS_USER',
+    'geonode.people.models.get_anonymous_user_instance'
+)
 
 # Whether the uplaoded resources should be public and downloadable by default or not
-DEFAULT_ANONYMOUS_VIEW_PERMISSION = str2bool(os.getenv('DEFAULT_ANONYMOUS_VIEW_PERMISSION', 'True'))
-DEFAULT_ANONYMOUS_DOWNLOAD_PERMISSION = str2bool(os.getenv('DEFAULT_ANONYMOUS_VIEW_PERMISSION', 'True'))
+DEFAULT_ANONYMOUS_VIEW_PERMISSION = strtobool(
+    os.getenv('DEFAULT_ANONYMOUS_VIEW_PERMISSION', 'True')
+)
+DEFAULT_ANONYMOUS_DOWNLOAD_PERMISSION = strtobool(
+    os.getenv('DEFAULT_ANONYMOUS_VIEW_PERMISSION', 'True')
+)
 
 #
 # Settings for default search size
 #
-DEFAULT_SEARCH_SIZE = int(os.getenv('DEFAULT_SEARCH_SIZE','10'))
+DEFAULT_SEARCH_SIZE = int(os.getenv('DEFAULT_SEARCH_SIZE', '10'))
 
 
 #
@@ -492,16 +518,24 @@ _DEFAULT_ACTSTREAM_SETTINGS = {
     'GFK_FETCH_DEPTH': 1,
 }
 
-ACTSTREAM_SETTINGS = os.getenv('ACTSTREAM_SETTINGS',_DEFAULT_ACTSTREAM_SETTINGS)
+ACTSTREAM_SETTINGS = os.getenv('ACTSTREAM_SETTINGS', _DEFAULT_ACTSTREAM_SETTINGS)
 
 # Settings for Social Apps
-REGISTRATION_OPEN =  str2bool(os.getenv('REGISTRATION_OPEN', 'False'))
-ACCOUNT_EMAIL_CONFIRMATION_EMAIL = str2bool(os.getenv('ACCOUNT_EMAIL_CONFIRMATION_EMAIL', 'False'))
-ACCOUNT_EMAIL_CONFIRMATION_REQUIRED = str2bool(os.getenv('ACCOUNT_EMAIL_CONFIRMATION_REQUIRED', 'False'))
-ACCOUNT_APPROVAL_REQUIRED = str2bool(os.getenv('ACCOUNT_APPROVAL_REQUIRED', 'False'))
+REGISTRATION_OPEN =  strtobool(os.getenv('REGISTRATION_OPEN', 'False'))
+ACCOUNT_EMAIL_CONFIRMATION_EMAIL = strtobool(
+    os.getenv('ACCOUNT_EMAIL_CONFIRMATION_EMAIL', 'False')
+)
+ACCOUNT_EMAIL_CONFIRMATION_REQUIRED = strtobool(
+    os.getenv('ACCOUNT_EMAIL_CONFIRMATION_REQUIRED', 'False')
+)
+ACCOUNT_APPROVAL_REQUIRED = strtobool(
+    os.getenv('ACCOUNT_APPROVAL_REQUIRED', 'False')
+)
 
 # Email for users to contact admins.
-THEME_ACCOUNT_CONTACT_EMAIL = os.getenv('THEME_ACCOUNT_CONTACT_EMAIL','admin@example.com')
+THEME_ACCOUNT_CONTACT_EMAIL = os.getenv(
+    'THEME_ACCOUNT_CONTACT_EMAIL', 'admin@example.com'
+)
 
 #
 # Test Settings
@@ -534,33 +568,34 @@ _DEFAULT_NOSE_ARGS = [
 #      '--stop',
 #      '--pdb',
       ]
-NOSE_ARGS = os.getenv('NOSE_ARGS',_DEFAULT_NOSE_ARGS)
+NOSE_ARGS = os.getenv('NOSE_ARGS', _DEFAULT_NOSE_ARGS)
 
 
-GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY',"ABQIAAAAkofooZxTfcCv9Wi3zzGTVxTnme5EwnLVtEDGnh-lFVzRJhbdQhQgAhB1eT_2muZtc0dl-ZSWrtzmrw")
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY', "ABQIAAAAkofooZxTfcCv9Wi3zzGTVxTnme5EwnLVtEDGnh-lFVzRJhbdQhQgAhB1eT_2muZtc0dl-ZSWrtzmrw")
 
 #
 # GeoNode specific settings
 #
+SITEURL = os.getenv('SITEURL', "http://localhost:8000/")
+SITENAME = os.getenv('SITENAME', "docker_geonode")
 
-SITEURL = os.getenv('SITEURL',"http://localhost:8000/")
-SITENAME = 'BNPB GeoNode'
+USE_QUEUE = strtobool(os.getenv('USE_QUEUE', 'False'))
 
-USE_QUEUE = str2bool(os.getenv('USE_QUEUE', 'False'))
+DEFAULT_WORKSPACE = os.getenv('DEFAULT_WORKSPACE', 'geonode')
+CASCADE_WORKSPACE = os.getenv('CASCADE_WORKSPACE', 'geonode')
 
-DEFAULT_WORKSPACE = os.getenv('DEFAULT_WORKSPACE','geonode')
-CASCADE_WORKSPACE = os.getenv('CASCADE_WORKSPACE','geonode')
-
-OGP_URL = os.getenv('OGP_URL',"http://geodata.tufts.edu/solr/select")
+OGP_URL = os.getenv('OGP_URL', "http://geodata.tufts.edu/solr/select")
 
 # Topic Categories list should not be modified (they are ISO). In case you
 # absolutely need it set to True this variable
-MODIFY_TOPICCATEGORY = str2bool(os.getenv('MODIFY_TOPICCATEGORY', 'False'))
+MODIFY_TOPICCATEGORY = strtobool(os.getenv('MODIFY_TOPICCATEGORY', 'False'))
 
-MISSING_THUMBNAIL = os.getenv('MISSING_THUMBNAIL','geonode/img/missing_thumb.png')
+MISSING_THUMBNAIL = os.getenv(
+    'MISSING_THUMBNAIL', 'geonode/img/missing_thumb.png'
+)
 
 # Search Snippet Cache Time in Seconds
-CACHE_TIME = int(os.getenv('CACHE_TIME','0'))
+CACHE_TIME = int(os.getenv('CACHE_TIME', '0'))
 
 GEOSERVER_LOCATION = os.getenv(
     'GEOSERVER_LOCATION', 'http://localhost:8080/geoserver/'
@@ -568,6 +603,7 @@ GEOSERVER_LOCATION = os.getenv(
 GEOSERVER_PUBLIC_LOCATION = os.getenv(
     'GEOSERVER_PUBLIC_LOCATION', 'http://localhost:8080/geoserver/'
 )
+
 # OGC (WMS/WFS/WCS) Server Settings
 # OGC (WMS/WFS/WCS) Server Settings
 _DEFAULT_OGC_SERVER = {
@@ -596,7 +632,7 @@ _DEFAULT_OGC_SERVER = {
         'TIMEOUT': 10  # number of seconds to allow for HTTP requests
     }
 }
-OGC_SERVER = os.getenv('OGC_SERVER',_DEFAULT_OGC_SERVER)
+OGC_SERVER = os.getenv('OGC_SERVER', _DEFAULT_OGC_SERVER)
 
 # Uploader Settings
 _DEFAULT_UPLOADER = {
@@ -632,7 +668,8 @@ _DEFAULT_CATALOGUE = {
         # 'PASSWORD': 'admin',
     }
 }
-CATALOGUE = os.getenv('CATALOGUE',_DEFAULT_CATALOGUE)
+CATALOGUE = os.getenv('CATALOGUE', _DEFAULT_CATALOGUE)
+
 # pycsw settings
 _DEFAULT_PYSCSW = {
     # pycsw configuration
@@ -682,13 +719,13 @@ _DEFAULT_PYSCSW = {
     }
 }
 
-PYCSW = os.getenv('PYCSW',_DEFAULT_PYSCSW)
+PYCSW = os.getenv('PYCSW', _DEFAULT_PYSCSW)
 
 # GeoNode javascript client configuration
 
 # default map projection
 # Note: If set to EPSG:4326, then only EPSG:4326 basemaps will work.
-DEFAULT_MAP_CRS = os.getenv('DEFAULT_MAP_CRS',"EPSG:900913")
+DEFAULT_MAP_CRS = os.getenv('DEFAULT_MAP_CRS', "EPSG:900913")
 
 
 # The FULLY QUALIFIED url to the GeoServer instance for this GeoNode.
@@ -707,7 +744,7 @@ DEFAULT_MAP_CENTER = (0, 0)
 # How tightly zoomed should newly created maps be?
 # 0 = entire world;
 # maximum zoom is between 12 and 15 (for Google Maps, coverage varies by area)
-DEFAULT_MAP_ZOOM = int(os.getenv('DEFAULT_MAP_ZOOM','0'))
+DEFAULT_MAP_ZOOM = int(os.getenv('DEFAULT_MAP_ZOOM', '0'))
 
 ALT_OSM_BASEMAPS = os.environ.get('ALT_OSM_BASEMAPS', False)
 CARTODB_BASEMAPS = os.environ.get('CARTODB_BASEMAPS', False)
@@ -722,7 +759,7 @@ _INIT_DEFAULT_LAYER_SOURCE = {
     "restUrl": "/gs/rest"
 }
 
-DEFAULT_LAYER_SOURCE = os.getenv('DEFAULT_LAYER_SOURCE',_INIT_DEFAULT_LAYER_SOURCE)
+DEFAULT_LAYER_SOURCE = os.getenv('DEFAULT_LAYER_SOURCE', _INIT_DEFAULT_LAYER_SOURCE)
 
 _DEFAULT_MAP_BASELAYERS = [{
     "source": {"ptype": "gxp_olsource"},
@@ -741,9 +778,9 @@ _DEFAULT_MAP_BASELAYERS = [{
     "group": "background"
 }]
 
-MAP_BASELAYERS = os.getenv('MAP_BASELAYERS',_DEFAULT_MAP_BASELAYERS)
+MAP_BASELAYERS = os.getenv('MAP_BASELAYERS', _DEFAULT_MAP_BASELAYERS)
 
-SOCIAL_BUTTONS = str2bool(os.getenv('SOCIAL_BUTTONS', 'True'))
+SOCIAL_BUTTONS = strtobool(os.getenv('SOCIAL_BUTTONS', 'True'))
 
 _DEFAULT_SOCIAL_ORIGINS = [{
     "label":"Email",
@@ -762,7 +799,8 @@ _DEFAULT_SOCIAL_ORIGINS = [{
     "url":"https://plus.google.com/share?url={url}",
     "css_class":"gp"
 }]
-SOCIAL_ORIGINS = os.getenv('SOCIAL_ORIGINS',_DEFAULT_SOCIAL_ORIGINS)
+SOCIAL_ORIGINS = os.getenv('SOCIAL_ORIGINS', _DEFAULT_SOCIAL_ORIGINS)
+
 #CKAN Query String Parameters names pulled from
 #https://github.com/ckan/ckan/blob/2052628c4a450078d58fb26bd6dc239f3cc68c3e/ckan/logic/action/create.py#L43
 CKAN_ORIGINS = [{
@@ -775,11 +813,11 @@ CKAN_ORIGINS = [{
 # Setting TWITTER_CARD to True will enable Twitter Cards
 # https://dev.twitter.com/cards/getting-started
 # Be sure to replace @GeoNode with your organization or site's twitter handle.
-TWITTER_CARD = str2bool(os.getenv('TWITTER_CARD', 'True'))
+TWITTER_CARD = strtobool(os.getenv('TWITTER_CARD', 'True'))
 TWITTER_SITE = '@GeoNode'
 TWITTER_HASHTAGS = ['geonode']
 
-OPENGRAPH_ENABLED =  str2bool(os.getenv('OPENGRAPH_ENABLED', 'True'))
+OPENGRAPH_ENABLED =  strtobool(os.getenv('OPENGRAPH_ENABLED', 'True'))
 
 # Enable Licenses User Interface
 # Regardless of selection, license field stil exists as a field in the Resourcebase model.
@@ -791,18 +829,18 @@ _DEFAULT_LICENSES = {
     'METADATA': 'verbose',
 }
 
-LICENSES = os.getenv('LICENSES',_DEFAULT_LICENSES)
+LICENSES = os.getenv('LICENSES', _DEFAULT_LICENSES)
 
 _DEFAULT_SRID = {
     'DETAIL': 'never',
 }
 
-SRID = os.getenv('SRID',_DEFAULT_SRID)
+SRID = os.getenv('SRID', _DEFAULT_SRID)
 
-SESSION_SERIALIZER = os.getenv('SESSION_SERIALIZER','django.contrib.sessions.serializers.PickleSerializer')
+SESSION_SERIALIZER = os.getenv('SESSION_SERIALIZER', 'django.contrib.sessions.serializers.PickleSerializer')
 
 # Require users to authenticate before using Geonode
-LOCKDOWN_GEONODE = str2bool(os.getenv('LOCKDOWN_GEONODE', 'False'))
+LOCKDOWN_GEONODE = strtobool(os.getenv('LOCKDOWN_GEONODE', 'False'))
 
 # Add additional paths (as regular expressions) that don't require
 # authentication.
@@ -819,11 +857,11 @@ PROXY_URL = '/proxy/?url=' if DEBUG else None
 # - pip install pyelasticsearch
 # Set HAYSTACK_SEARCH to True
 # Run "python manage.py rebuild_index"
-HAYSTACK_SEARCH = str2bool(os.getenv('HAYSTACK_SEARCH', 'False'))
+HAYSTACK_SEARCH = strtobool(os.getenv('HAYSTACK_SEARCH', 'False'))
 # Avoid permissions prefiltering
-SKIP_PERMS_FILTER = str2bool(os.getenv('SKIP_PERMS_FILTER', 'False'))
+SKIP_PERMS_FILTER = strtobool(os.getenv('SKIP_PERMS_FILTER', 'False'))
 # Update facet counts from Haystack
-HAYSTACK_FACET_COUNTS = str2bool(os.getenv('HAYSTACK_FACET_COUNTS', 'False'))
+HAYSTACK_FACET_COUNTS = strtobool(os.getenv('HAYSTACK_FACET_COUNTS', 'False'))
 # HAYSTACK_CONNECTIONS = {
 #    'default': {
 #        'ENGINE': 'haystack.backends.elasticsearch_backend.ElasticsearchSearchEngine',
@@ -857,22 +895,22 @@ DOWNLOAD_FORMATS_RASTER = [
     'GZIP'
 ]
 
-ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE = str2bool(os.getenv('ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE', 'False'))
+ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE = strtobool(os.getenv('ACCOUNT_NOTIFY_ON_PASSWORD_CHANGE', 'False'))
 
 TASTYPIE_DEFAULT_FORMATS = ['json']
 
 # gravatar settings
-AUTO_GENERATE_AVATAR_SIZES = (20, 32, 80, 100, 140, 200)
+AUTO_GENERATE_AVATAR_SIZES = (20, 30, 32, 40, 50, 65, 70, 80, 100, 140, 200, 240)
 
 # notification settings
-NOTIFICATION_LANGUAGE_MODULE = os.getenv('NOTIFICATION_LANGUAGE_MODULE',"account.Account")
+NOTIFICATION_LANGUAGE_MODULE = os.getenv('NOTIFICATION_LANGUAGE_MODULE', "account.Account")
 
 # Number of results per page listed in the GeoNode search pages
-CLIENT_RESULTS_LIMIT = int (os.getenv('CLIENT_RESULTS_LIMIT','100'))
+CLIENT_RESULTS_LIMIT = int (os.getenv('CLIENT_RESULTS_LIMIT', '100'))
 
 # Number of items returned by the apis 0 equals no limit
-API_LIMIT_PER_PAGE = int(os.getenv('API_LIMIT_PER_PAGE','0'))
-API_INCLUDE_REGIONS_COUNT = str2bool(os.getenv('API_INCLUDE_REGIONS_COUNT', 'False'))
+API_LIMIT_PER_PAGE = int(os.getenv('API_LIMIT_PER_PAGE', '0'))
+API_INCLUDE_REGIONS_COUNT = strtobool(os.getenv('API_INCLUDE_REGIONS_COUNT', 'False'))
 
 _DEFAULT_LEAFLET_CONFIG = {
     'TILES': [
@@ -903,9 +941,11 @@ _DEFAULT_LEAFLET_CONFIG = {
             'js': 'lib/js/Leaflet.fullscreen.min.js?v=%s' % VERSION,
             'auto-include': True,
         },
-    }
+    },
+    'SRID': 3857,
+    'RESET_VIEW': False
 }
-LEAFLET_CONFIG = os.getenv('LEAFLET_CONFIG',_DEFAULT_LEAFLET_CONFIG)
+LEAFLET_CONFIG = os.getenv('LEAFLET_CONFIG', _DEFAULT_LEAFLET_CONFIG)
 
 # option to enable/disable resource unpublishing for administrators
 RESOURCE_PUBLISHING = False
@@ -916,8 +956,8 @@ EXIF_ENABLED = False
 # Settings for NLP contrib app
 NLP_ENABLED = False
 NLP_LOCATION_THRESHOLD = 1.0
-NLP_LIBRARY_PATH = os.getenv('NLP_LIBRARY_PATH',"/opt/MITIE/mitielib")
-NLP_MODEL_PATH = os.getenv('NLP_MODEL_PATH',"/opt/MITIE/MITIE-models/english/ner_model.dat")
+NLP_LIBRARY_PATH = os.getenv('NLP_LIBRARY_PATH', "/opt/MITIE/mitielib")
+NLP_MODEL_PATH = os.getenv('NLP_MODEL_PATH', "/opt/MITIE/MITIE-models/english/ner_model.dat")
 
 # Settings for Slack contrib app
 SLACK_ENABLED = False
@@ -1015,11 +1055,21 @@ if S3_MEDIA_ENABLED:
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto.S3BotoStorage'
     MEDIA_URL = "https://%s/%s/" % (AWS_S3_BUCKET_DOMAIN, MEDIAFILES_LOCATION)
 
+
 djcelery.setup_loader()
 
+# There are 3 ways to override GeoNode settings:
+# 1. Using environment variables, if your changes to GeoNode are minimal.
+# 2. Creating a downstream project, if you are doing a lot of customization.
+# 3. Override settings in a local_settings.py file, legacy.
+# Load more settings from a file called local_settings.py if it exists
+try:
+    from local_settings import *  # noqa
+except ImportError:
+    pass
+
+
 # Load additonal basemaps, see geonode/contrib/api_basemap/README.md
-# TODO: Before the 2.5 release, let's change the line below. Apparently it is
-# doing a circular import, we should not need to do a import * from here.
 try:
     from geonode.contrib.api_basemaps import *
 except ImportError:
@@ -1066,29 +1116,17 @@ if 'geonode.geoserver' in INSTALLED_APPS:
     _DEFAULT_ABSOLUTE_URL_OVERRIDES = {
         'auth.user': get_user_url
     }
-    ABSOLUTE_URL_OVERRIDES = os.getenv('ABSOLUTE_URL_OVERRIDES',_DEFAULT_ABSOLUTE_URL_OVERRIDES)
-    AUTH_PROFILE_MODULE = os.getenv('AUTH_PROFILE_MODULE','maps.Contact')
-    REGISTRATION_OPEN =  str2bool(os.getenv('REGISTRATION_OPEN', 'True'))
+    ABSOLUTE_URL_OVERRIDES = os.getenv('ABSOLUTE_URL_OVERRIDES', _DEFAULT_ABSOLUTE_URL_OVERRIDES)
+    AUTH_PROFILE_MODULE = os.getenv('AUTH_PROFILE_MODULE', 'maps.Contact')
+    REGISTRATION_OPEN =  strtobool(os.getenv('REGISTRATION_OPEN', 'True'))
 
-    ACCOUNT_ACTIVATION_DAYS = int(os.getenv('ACCOUNT_ACTIVATION_DAYS','7'))
+    ACCOUNT_ACTIVATION_DAYS = int(os.getenv('ACCOUNT_ACTIVATION_DAYS', '7'))
 
     # TODO: Allow overriding with an env var
-    DB_DATASTORE = str2bool(os.getenv('DB_DATASTORE', 'True'))
-
-    ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', ['localhost', ])
+    DB_DATASTORE = strtobool(os.getenv('DB_DATASTORE', 'True'))
 
 # Keywords thesauri
 # e.g. THESAURI = [{'name':'inspire_themes', 'required':True, 'filter':True}, {'name':'inspire_concepts', 'filter':True}, ]
 # Required: (boolean, optional, default false) mandatory while editing metadata (not implemented yet)
 # Filter: (boolean, optional, default false) a filter option on that thesaurus will appear in the main search page
 THESAURI = []
-
-# There are 3 ways to override GeoNode settings:
-# 1. Using environment variables, if your changes to GeoNode are minimal.
-# 2. Creating a downstream project, if you are doing a lot of customization.
-# 3. Override settings in a local_settings.py file, legacy.
-# Load more settings from a file called local_settings.py if it exists
-try:
-    from local_settings import *  # noqa
-except ImportError:
-    pass

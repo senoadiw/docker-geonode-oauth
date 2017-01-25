@@ -73,6 +73,7 @@ urlpatterns = patterns('',
 
                        # h keywords
                        url(r'^h_keywords_api$', 'geonode.views.h_keywords', name='h_keywords_api'),
+
                        # Search views
                        url(r'^search/$', TemplateView.as_view(template_name='search/search.html'), name='search'),
 
@@ -106,6 +107,7 @@ urlpatterns = patterns('',
                        (r'^groups/', include('geonode.groups.urls')),
                        (r'^documents/', include('geonode.documents.urls')),
                        (r'^services/', include('geonode.services.urls')),
+
                        # OAuth Provider
                        url(r'^o/', include('oauth2_provider.urls', namespace='oauth2_provider')),
 
@@ -134,6 +136,11 @@ if 'geonode.geoserver' in settings.INSTALLED_APPS:
                             (r'^upload/', include('geonode.upload.urls')),
                             (r'^gs/', include('geonode.geoserver.urls')),
                             )
+if 'geonode_qgis_server' in settings.INSTALLED_APPS:
+    # QGIS Server's urls
+    urlpatterns += patterns('',
+                            (r'', include('geonode_qgis_server.urls')),
+                            )
 
 if 'notification' in settings.INSTALLED_APPS:
     urlpatterns += patterns('',
@@ -144,6 +151,7 @@ if "djmp" in settings.INSTALLED_APPS:
     urlpatterns += patterns('',
                             (r'^djmp/', include('djmp.urls')),
                             )
+
 # Set up proxy
 urlpatterns += geonode.proxy.urls.urlpatterns
 
