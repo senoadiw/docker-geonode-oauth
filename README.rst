@@ -1,7 +1,7 @@
 docker_geonode
 ========================
 
-GeoNode 2.5.9 with GeoServer oauth2 configured
+GeoNode 2.5.10 with GeoServer oauth2 configured
 
 Trying out docker-geonode-oauth
 -------------------------------
@@ -17,17 +17,15 @@ If using Docker with the VirtualBox driver on Windows, make sure to assign at le
 3. docker-compose up -d
 4. docker-compose ps
 5. docker exec -it dockergeonodeoauth_django_1 bash
-    * python manage.py migrate account --noinput && python manage.py migrate --noinput && python manage.py collectstatic --noinput
+    * python manage.py migrate --noinput && python manage.py collectstatic --noinput
     * python manage.py loaddata sample_admin
     * python manage.py loaddata initial_data
     * python manage.py loaddata fixtures/default_oauth_apps.json
     * exit
-6. docker-compose stop
-7. docker-compose up -d
-8. wait a few minutes while GeoServer initializes
-9. access GeoNode at http://geonode
-10. try signing in from http://geonode/geoserver (admin admin)
-11. done!
+6. wait a few minutes while GeoServer initializes
+7. access GeoNode at http://geonode
+8. try signing in from http://geonode/geoserver (admin admin)
+9. done!
 
 -------------------------------
 
