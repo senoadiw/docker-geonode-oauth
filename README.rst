@@ -6,8 +6,6 @@ GeoNode 2.5.10 with GeoServer oauth2 configured
 Trying out docker-geonode-oauth
 -------------------------------
 
-This will run GeoNode on the default docker machine.
-
 Make sure the default machine is accessible at http://geonode. Edit the /etc/hosts file if necessary.
 
 If using Docker with the VirtualBox driver on Windows, make sure to assign at least 4096MB of RAM to the default machine VM.
