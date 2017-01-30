@@ -1,1 +1,2 @@
+-e git+https://github.com/terranodo/django-mapproxy#egg=djmp
 geonode==2.5.10

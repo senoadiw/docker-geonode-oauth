@@ -358,8 +358,27 @@ _DEFAULT_INSTALLED_APPS = (
 
 ) + GEONODE_APPS
 
+#### djmp apps
+DJMP_APPS = (
+    'geonode.contrib.mp',
+    'djmp',
+)
+_DEFAULT_INSTALLED_APPS = DJMP_APPS + _DEFAULT_INSTALLED_APPS
+
 INSTALLED_APPS = os.getenv('INSTALLED_APPS', _DEFAULT_INSTALLED_APPS)
 
+#### geonode.contrib.mp settings
+USE_DISK_CACHE = True
+USE_DJMP_FOR_GEONODE_LAYERS = True
+DJMP_AUTHORIZATION_CLASS = 'geonode.contrib.mp.authorisation.GeoNodeDJMPAuthorization'
+CACHE_ZOOM_START = 0
+CACHE_ZOOM_STOP = 12
+CACHE_ON_LAYER_LOAD = True
+
+#### djmp settings
+DJMP_AUTHORIZATION_CLASS = 'djmp.guardian_auth.GuardianAuthorization'
+TILESET_CACHE_DIRECTORY = os.path.join(PROJECT_ROOT, "cache/layers")
+TILESET_CACHE_URL = "cache/layers"
 
 _DEFAULT_LOGGING = {
     'version': 1,
