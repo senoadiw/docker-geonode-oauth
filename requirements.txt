@@ -1,1 +1,2 @@
+django-geonode-client
 geonode==2.5.10

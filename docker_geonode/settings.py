@@ -329,7 +329,7 @@ _DEFAULT_INSTALLED_APPS = (
     'geoexplorer',
     'leaflet',
     'django_extensions',
-    #'geonode-client',
+    'geonode-client',
     # 'haystack',
     'autocomplete_light',
     'mptt',
@@ -986,7 +986,7 @@ CACHES = {
     #     }
 }
 
-LAYER_PREVIEW_LIBRARY = 'geoext'
+LAYER_PREVIEW_LIBRARY = 'react'
 
 SERVICE_UPDATE_INTERVAL = 0
 
