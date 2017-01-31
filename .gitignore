@@ -1,6 +1,8 @@
 *.pyc
 *.log
 *.pid
+src/*
 celerybeat-schedule.*
 docker_geonode/static_root/*
 docker_geonode/uploaded/*
+docker_geonode/cache/*
