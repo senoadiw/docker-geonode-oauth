@@ -1,1 +1,1 @@
-geonode==2.5.10
+geonode==2.5.9
