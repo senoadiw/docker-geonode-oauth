@@ -85,6 +85,11 @@ DATABASES = {
     'default': dj_database_url.parse(DATABASE_URL, conn_max_age=600)
 }
 
+POSTGIS_URL = os.getenv('POSTGIS_URL', None)
+
+if POSTGIS_URL:
+    DATABASES['datastore'] = dj_database_url.parse(POSTGIS_URL, dj_database_url.SCHEMES['postgis'], conn_max_age=600)
+
 MANAGERS = ADMINS = os.getenv('ADMINS', [])
 
 # Local time zone for this installation. Choices can be found here:
@@ -355,10 +360,36 @@ _DEFAULT_INSTALLED_APPS = (
     'polymorphic',
     'guardian',
     'oauth2_provider',
+    'osgeo_importer'
 
 ) + GEONODE_APPS
 
 INSTALLED_APPS = os.getenv('INSTALLED_APPS', _DEFAULT_INSTALLED_APPS)
+
+#### osgeo_importer settings
+OSGEO_DATASTORE = 'datastore'
+OSGEO_IMPORTER_GEONODE_ENABLED = True
+OSGEO_IMPORTER_VALID_EXTENSIONS = [
+    'shp', 'shx', 'prj', 'dbf', 'kml', 'geojson', 'json', 'tif', 'tiff',
+    'gpkg', 'csv', 'zip', 'xml', 'sld'
+]
+IMPORT_HANDLERS = [
+    # If GeoServer handlers are enabled, you must have an instance of geoserver running.
+    # Warning: the order of the handlers here matters.
+    'osgeo_importer.handlers.FieldConverterHandler',
+    'osgeo_importer.handlers.geoserver.GeoserverPublishHandler',
+    'osgeo_importer.handlers.geoserver.GeoserverPublishCoverageHandler',
+    'osgeo_importer.handlers.geoserver.GeoServerTimeHandler',
+    'osgeo_importer.handlers.geoserver.GeoWebCacheHandler',
+    'osgeo_importer.handlers.geoserver.GeoServerBoundsHandler',
+    'osgeo_importer.handlers.geoserver.GenericSLDHandler',
+    'osgeo_importer.handlers.geonode.GeoNodePublishHandler',
+#     'osgeo_importer.handlers.mapproxy.publish_handler.MapProxyGPKGTilePublishHandler',
+    'osgeo_importer.handlers.geoserver.GeoServerStyleHandler',
+    'osgeo_importer.handlers.geonode.GeoNodeMetadataHandler'
+]
+
+PROJECTION_DIRECTORY = os.path.join(PROJECT_ROOT, "data")
 
 
 _DEFAULT_LOGGING = {
@@ -636,6 +667,10 @@ _DEFAULT_OGC_SERVER = {
         'TIMEOUT': 10  # number of seconds to allow for HTTP requests
     }
 }
+
+if 'datastore' in DATABASES:
+    _DEFAULT_OGC_SERVER['default']['DATASTORE'] = 'datastore'
+
 OGC_SERVER = os.getenv('OGC_SERVER', _DEFAULT_OGC_SERVER)
 
 # Uploader Settings

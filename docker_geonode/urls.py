@@ -152,6 +152,10 @@ if "djmp" in settings.INSTALLED_APPS:
                             (r'^djmp/', include('djmp.urls')),
                             )
 
+if 'osgeo_importer' in settings.INSTALLED_APPS:
+    from osgeo_importer.urls import urlpatterns as importer_urlpatterns
+    urlpatterns += importer_urlpatterns
+
 # Set up proxy
 urlpatterns += geonode.proxy.urls.urlpatterns
 

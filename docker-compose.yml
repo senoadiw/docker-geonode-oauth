@@ -4,6 +4,9 @@ services:
   postgres:
     image: postgres
 
+  postgis:
+    image: mdillon/postgis
+
   elasticsearch:
    image: elasticsearch
 

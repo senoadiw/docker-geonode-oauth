@@ -1,1 +1,2 @@
-geonode==2.5.9
+django-osgeo-importer
+geonode==2.5.10
